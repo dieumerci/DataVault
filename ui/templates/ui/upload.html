@@ -1,0 +1,196 @@
+{% extends "ui/base.html" %}
+
+{% block title %}Upload – Data Vault{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Upload Document</h1>
+    <p class="mt-1 text-sm text-gray-500">
+        Upload a PDF for automatic field extraction, or paste a JSON payload for testing.
+    </p>
+</div>
+
+{% if error %}
+<div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+    <div class="flex items-center">
+        <svg class="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-sm text-red-700">{{ error }}</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- PDF Upload Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                PDF Upload
+            </h2>
+        </div>
+        <form id="pdf-upload-form" method="post" enctype="multipart/form-data" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="form_type" class="block text-sm font-medium text-gray-700 mb-1">
+                    Form Type
+                </label>
+                <select id="form_type" name="form_type"
+                        class="w-full rounded-lg border-gray-300 shadow-sm
+                               focus:border-brand-500 focus:ring-brand-500 text-sm
+                               border px-3 py-2">
+                    <option value="">-- Select type --</option>
+                    <option value="w9">W-9</option>
+                    <option value="ach_authorization">ACH Authorization</option>
+                    <option value="loan_application">Loan Application</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="file" class="block text-sm font-medium text-gray-700 mb-1">
+                    PDF File
+                </label>
+                <div id="pdf-drop-zone"
+                     role="button"
+                     tabindex="0"
+                     class="relative mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300
+                            border-dashed rounded-lg hover:border-brand-400 transition-colors cursor-pointer">
+                    <input id="file" name="file" type="file" accept="application/pdf,.pdf" required
+                           class="absolute inset-0 h-full w-full opacity-0 cursor-pointer z-10">
+                    <div class="space-y-1 text-center pointer-events-none">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <div class="text-sm text-gray-600">
+                            <span class="font-medium text-brand-600">Choose a PDF</span>
+                            <span class="pl-1">or drag and drop</span>
+                        </div>
+                        <p id="selected-file-name" class="text-xs text-gray-500 hidden"></p>
+                        <p class="text-xs text-gray-500">PDF up to 10MB</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="pdf-upload-submit" type="submit"
+                    class="w-full inline-flex justify-center items-center px-4 py-2.5
+                           text-sm font-medium text-white bg-brand-600 rounded-lg
+                           hover:bg-brand-700 transition-colors shadow-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Upload PDF
+            </button>
+
+            <div id="pdf-upload-indicator"
+                 class="hidden items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-700">
+                <svg class="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                          d="M4 12a8 8 0 018-8V1C5.925 1 1 5.925 1 12h3z"></path>
+                </svg>
+                Uploading and processing document...
+            </div>
+        </form>
+    </div>
+
+    <!-- JSON Payload Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                JSON Payload
+                <span class="ml-2 px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">Dev / Test</span>
+            </h2>
+        </div>
+        <form method="post" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="json_payload" class="block text-sm font-medium text-gray-700 mb-1">
+                    Paste extracted fields JSON
+                </label>
+                <!--
+                  Pre-filled with a valid example so testers can click
+                  Submit JSON immediately and see a document created.
+                  Clear it and paste your own payload if you want.
+
+                  IMPORTANT: this is actual textarea CONTENT, not a placeholder.
+                  Placeholders look identical but send empty strings on submit —
+                  a classic gotcha that wastes debugging time.
+                -->
+                <textarea id="json_payload" name="json_payload" rows="14"
+                          class="w-full rounded-lg border-gray-300 shadow-sm font-mono text-sm
+                                 focus:border-brand-500 focus:ring-brand-500 border px-3 py-2"
+>{
+  "form_type": "w9",
+  "fields": [
+    {"key": "routing_number", "value": "021000021", "data_type": "string", "confidence": 0.9},
+    {"key": "account_number", "value": "123456789012", "data_type": "string", "confidence": 0.8},
+    {"key": "amount", "value": "1500.00", "data_type": "number", "confidence": 0.95},
+    {"key": "customer_name", "value": "Jane Smith", "data_type": "string", "confidence": 0.7}
+  ]
+}</textarea>
+            </div>
+
+            <button type="submit"
+                    class="w-full inline-flex justify-center items-center px-4 py-2.5
+                           text-sm font-medium text-white bg-gray-800 rounded-lg
+                           hover:bg-gray-900 transition-colors shadow-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Submit JSON
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+(() => {
+    const pdfUploadForm = document.getElementById("pdf-upload-form");
+    const pdfUploadSubmit = document.getElementById("pdf-upload-submit");
+    const pdfUploadIndicator = document.getElementById("pdf-upload-indicator");
+    const fileInput = document.getElementById("file");
+    const selectedFileName = document.getElementById("selected-file-name");
+
+    if (!pdfUploadForm || !pdfUploadSubmit || !pdfUploadIndicator || !fileInput || !selectedFileName) {
+        return;
+    }
+
+    const updateSelectedFile = () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+            selectedFileName.classList.add("hidden");
+            selectedFileName.textContent = "";
+            return;
+        }
+        selectedFileName.textContent = `Selected: ${file.name}`;
+        selectedFileName.classList.remove("hidden");
+    };
+
+    fileInput.addEventListener("change", updateSelectedFile);
+
+    pdfUploadForm.addEventListener("submit", () => {
+        pdfUploadSubmit.disabled = true;
+        pdfUploadSubmit.classList.add("opacity-70", "cursor-not-allowed");
+        pdfUploadIndicator.classList.remove("hidden");
+        pdfUploadIndicator.classList.add("flex");
+    });
+})();
+</script>
+{% endblock %}

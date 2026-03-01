@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Data Vault{% endblock %}</title>
+
+    <!--
+      Tailwind CSS (play CDN) — compiles utility classes in the browser.
+      Great for prototypes and demos. In production you'd use the CLI build
+      to purge unused classes and ship a tiny CSS bundle.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Small customization so our brand color is available as 'brand'
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50:  '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!--
+      HTMX — makes our UI dynamic without writing JavaScript.
+      Attributes like hx-post, hx-target, hx-swap turn plain HTML
+      into an interactive SPA-like experience.
+    -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <style>
+        /*
+          HTMX swap animation — when a field row gets updated,
+          flash it briefly so the user sees the change happened.
+          This is a nice UX touch that requires zero JavaScript.
+        */
+        .field-row {
+            transition: background-color 0.6s ease;
+        }
+        .field-row.htmx-settling {
+            background-color: #dcfce7 !important;
+        }
+
+        /* Smooth loading indicator for HTMX requests */
+        .htmx-request .htmx-indicator {
+            display: inline-block;
+        }
+        .htmx-indicator {
+            display: none;
+        }
+    </style>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <!-- Top navigation bar -->
+        <nav class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <!-- Logo + main links -->
+                    <div class="flex items-center space-x-8">
+                        <a href="/" class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <span class="text-lg font-semibold text-gray-900">Data Vault</span>
+                        </a>
+                        <div class="hidden sm:flex items-center space-x-1">
+                            <a href="{% url 'ui:upload' %}"
+                               class="px-3 py-2 rounded-md text-sm font-medium
+                                      {% if request.resolver_match.url_name == 'upload' %}
+                                          text-brand-600 bg-brand-50
+                                      {% else %}
+                                          text-gray-600 hover:text-gray-900 hover:bg-gray-50
+                                      {% endif %}">
+                                Upload
+                            </a>
+                            <a href="{% url 'ui:search' %}"
+                               class="px-3 py-2 rounded-md text-sm font-medium
+                                      {% if request.resolver_match.url_name == 'search' %}
+                                          text-brand-600 bg-brand-50
+                                      {% else %}
+                                          text-gray-600 hover:text-gray-900 hover:bg-gray-50
+                                      {% endif %}">
+                                Search
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Auth section (right side) -->
+                    <div class="flex items-center space-x-4">
+                        {% if user.is_authenticated %}
+                            <span class="text-sm text-gray-500">
+                                Logged in as <strong class="text-gray-700">{{ user.username }}</strong>
+                            </span>
+                            <a href="{% url 'ui:logout' %}"
+                               class="text-sm text-gray-500 hover:text-red-600 transition-colors">
+                                Sign out
+                            </a>
+                        {% else %}
+                            <a href="{% url 'ui:login' %}"
+                               class="inline-flex items-center px-4 py-2 text-sm font-medium text-white
+                                      bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors">
+                                Sign in
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

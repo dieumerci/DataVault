@@ -1,0 +1,144 @@
+{% extends "ui/base.html" %}
+
+{% block title %}Search – Data Vault{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Search Documents</h1>
+    <p class="mt-1 text-sm text-gray-500">
+        Filter by form type, field values, amount range, or upload date.
+    </p>
+</div>
+
+<!--
+  Search form with HTMX dynamic updates.
+
+  How this works:
+    - hx-get sends a GET to this same URL with the filter params
+    - hx-target="#results" tells HTMX to update just the results div
+    - hx-swap="innerHTML" replaces the div's contents (not the div itself)
+    - hx-push-url="true" updates the browser URL so searches are bookmarkable
+    - The server checks for HX-Request header: if present, returns only the
+      results partial. If not, returns the full page with filters + results.
+-->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+    <form hx-get="{% url 'ui:search' %}"
+          hx-target="#results"
+          hx-swap="innerHTML"
+          hx-trigger="submit"
+          hx-push-url="true"
+          class="p-6">
+
+        <!-- First row: text-based filters -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label for="form_type" class="block text-sm font-medium text-gray-700 mb-1">
+                    Form Type
+                </label>
+                <select id="form_type" name="form_type"
+                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm
+                               focus:border-brand-500 focus:ring-brand-500
+                               border px-3 py-2">
+                    <option value="">All types</option>
+                    <option value="w9" {% if params.form_type == "w9" %}selected{% endif %}>W-9</option>
+                    <option value="ach_authorization" {% if params.form_type == "ach_authorization" %}selected{% endif %}>ACH Authorization</option>
+                    <option value="loan_application" {% if params.form_type == "loan_application" %}selected{% endif %}>Loan Application</option>
+                </select>
+            </div>
+            <div>
+                <label for="field_key" class="block text-sm font-medium text-gray-700 mb-1">
+                    Field Key
+                </label>
+                <input type="text" id="field_key" name="field_key"
+                       value="{{ params.field_key|default:'' }}"
+                       placeholder="e.g. routing_number"
+                       class="w-full rounded-lg border-gray-300 shadow-sm text-sm
+                              focus:border-brand-500 focus:ring-brand-500
+                              border px-3 py-2">
+            </div>
+            <div>
+                <label for="field_value" class="block text-sm font-medium text-gray-700 mb-1">
+                    Field Value
+                    <span class="text-gray-400 font-normal">(partial match)</span>
+                </label>
+                <input type="text" id="field_value" name="field_value"
+                       value="{{ params.field_value|default:'' }}"
+                       placeholder="Searches effective value..."
+                       class="w-full rounded-lg border-gray-300 shadow-sm text-sm
+                              focus:border-brand-500 focus:ring-brand-500
+                              border px-3 py-2">
+            </div>
+        </div>
+
+        <!-- Second row: numeric and date range filters -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+            <div>
+                <label for="amount_min" class="block text-sm font-medium text-gray-700 mb-1">
+                    Amount Min
+                </label>
+                <input type="number" id="amount_min" name="amount_min" step="0.01"
+                       value="{{ params.amount_min|default:'' }}"
+                       placeholder="0.00"
+                       class="w-full rounded-lg border-gray-300 shadow-sm text-sm
+                              focus:border-brand-500 focus:ring-brand-500
+                              border px-3 py-2">
+            </div>
+            <div>
+                <label for="amount_max" class="block text-sm font-medium text-gray-700 mb-1">
+                    Amount Max
+                </label>
+                <input type="number" id="amount_max" name="amount_max" step="0.01"
+                       value="{{ params.amount_max|default:'' }}"
+                       placeholder="99999.99"
+                       class="w-full rounded-lg border-gray-300 shadow-sm text-sm
+                              focus:border-brand-500 focus:ring-brand-500
+                              border px-3 py-2">
+            </div>
+            <div>
+                <label for="uploaded_from" class="block text-sm font-medium text-gray-700 mb-1">
+                    Uploaded From
+                </label>
+                <input type="date" id="uploaded_from" name="uploaded_from"
+                       value="{{ params.uploaded_from|default:'' }}"
+                       class="w-full rounded-lg border-gray-300 shadow-sm text-sm
+                              focus:border-brand-500 focus:ring-brand-500
+                              border px-3 py-2">
+            </div>
+            <div>
+                <label for="uploaded_to" class="block text-sm font-medium text-gray-700 mb-1">
+                    Uploaded To
+                </label>
+                <input type="date" id="uploaded_to" name="uploaded_to"
+                       value="{{ params.uploaded_to|default:'' }}"
+                       class="w-full rounded-lg border-gray-300 shadow-sm text-sm
+                              focus:border-brand-500 focus:ring-brand-500
+                              border px-3 py-2">
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button type="submit"
+                    class="inline-flex items-center px-4 py-2.5 text-sm font-medium text-white
+                           bg-brand-600 rounded-lg hover:bg-brand-700 transition-colors shadow-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Search
+            </button>
+            <!--
+              Loading indicator — HTMX shows this while the request is in flight.
+              The htmx-indicator class is hidden by default and shown during requests.
+            -->
+            <span class="htmx-indicator text-sm text-gray-400">
+                Searching...
+            </span>
+        </div>
+    </form>
+</div>
+
+<!-- Results area — HTMX replaces the inner HTML of this div -->
+<div id="results">
+    {% include "ui/partials/search_results.html" %}
+</div>
+{% endblock %}

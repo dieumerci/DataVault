@@ -1,0 +1,76 @@
+# ──────────────────────────────────────────────────────────────
+# Docker Compose configuration for Data Vault
+#
+# Two services: a PostgreSQL database and our Django web app.
+# That's it — no Redis, no Celery, no nginx. We keep it simple
+# because this is a take-home project, not a production deployment.
+#
+# To start everything:  docker compose up --build -d
+# To stop everything:   docker compose down
+# To see logs:          docker compose logs -f web
+# ──────────────────────────────────────────────────────────────
+
+services:
+
+  # ─── PostgreSQL Database ─────────────────────────────────
+  db:
+    image: postgres:16
+    environment:
+      # These must match the values in .env — both Django and Postgres
+      # need to agree on the database name, user, and password.
+      POSTGRES_DB: ${POSTGRES_DB:-datavault}
+      POSTGRES_USER: ${POSTGRES_USER:-datavault}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-datavault}
+    volumes:
+      # Named volume — persists data across container restarts.
+      # Without this, every "docker compose down" would wipe the database.
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      # Expose Postgres on the standard port so we can connect from
+      # the host machine (useful for debugging with pgAdmin or psql).
+      - "5432:5432"
+    # Healthcheck lets the web service wait until Postgres is actually
+    # ready to accept connections — not just "container has started".
+    # Without this, Django might try to run migrations before Postgres
+    # finishes its initialization, and the migration would fail.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-datavault}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Django Web Application ──────────────────────────────
+  web:
+    build: .
+    # The startup command does two things in sequence:
+    #   1. Run migrations (creates/updates database tables)
+    #   2. Start gunicorn (the production WSGI server)
+    #
+    # Gunicorn flags explained:
+    #   --timeout 120   PDF extraction can be slow, don't kill the worker
+    #   --workers 2     One worker handles requests while another extracts PDFs
+    #   --access-logfile -   Print request logs to stdout (captured by docker logs)
+    #   --reload        Auto-restart when code changes (dev convenience)
+    command: sh -c "python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000 --timeout 120 --workers 2 --access-logfile - --reload"
+    volumes:
+      # Mount our code directory into the container so code changes
+      # are reflected immediately (combined with gunicorn --reload).
+      - .:/app
+      # Separate volume for uploaded files — persists across restarts.
+      - media_data:/app/media
+    ports:
+      # The app is accessible at http://localhost:8000
+      - "8000:8000"
+    # Read environment variables from the .env file
+    env_file:
+      - .env
+    depends_on:
+      db:
+        # Wait for the healthcheck to pass before starting Django.
+        # This prevents "connection refused" errors during migrations.
+        condition: service_healthy
+
+# Named volumes — Docker manages the storage location.
+volumes:
+  pgdata:       # PostgreSQL data directory
+  media_data:   # Uploaded PDF files

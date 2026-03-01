@@ -1,0 +1,88 @@
+{% comment %}
+  Single field row — the heart of our HTMX interaction.
+
+  How it works:
+    1. form has hx-post  -> sends correction to the server
+    2. hx-target="#field-ID" -> tells HTMX which element to replace
+    3. hx-swap="outerHTML"   -> replace the entire tr, not just contents
+    4. Server returns THIS SAME TEMPLATE with updated data
+    5. HTMX swaps old row for new one — user sees it flash green
+
+  This partial is used twice:
+    - Initial render: via include in document_detail.html
+    - HTMX response: returned by correct_field() view
+  One template, two uses — keeps them perfectly in sync.
+{% endcomment %}
+<tr class="field-row hover:bg-gray-50 transition-colors" id="field-{{ field.id }}">
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="text-sm font-medium text-gray-900">{{ field.key }}</span>
+        <span class="block text-xs text-gray-400">{{ field.data_type }}</span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
+        {{ field.original_value }}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm">
+        {% if field.corrected_value %}
+            <span class="text-green-700 font-medium">{{ field.corrected_value }}</span>
+            <span class="block text-xs text-gray-400 mt-0.5">
+                by {{ field.corrected_by|default:"unknown" }}
+                · {{ field.corrected_at|date:"d M H:i" }}
+            </span>
+        {% else %}
+            <span class="text-gray-300">—</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="text-sm font-semibold text-gray-900">{{ field.effective_value }}</span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        {% if field.confidence %}
+            <!--
+              Confidence bar — a little visual flair. The width is set
+              inline because Tailwind can't handle dynamic percentages.
+
+              widthratio trick: confidence is 0-1 (like 0.8), but CSS
+              needs 0-100%. widthratio does (value / max) * scale,
+              so (0.8 / 1) * 100 = 80. No custom template filter needed.
+            -->
+            <div class="flex items-center space-x-2">
+                <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full
+                                {% if field.confidence >= 0.8 %}bg-green-500
+                                {% elif field.confidence >= 0.5 %}bg-amber-500
+                                {% else %}bg-red-400{% endif %}"
+                         style="width: {% widthratio field.confidence 1 100 %}%">
+                    </div>
+                </div>
+                <span class="text-xs text-gray-500">{{ field.confidence|floatformat:2 }}</span>
+            </div>
+        {% else %}
+            <span class="text-xs text-gray-300">—</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <!--
+          The inline correction form. hx-post fires on submit,
+          sends the new value, and HTMX replaces this whole <tr>.
+        -->
+        <form hx-post="{% url 'ui:correct_field' pk=field.pk %}"
+              hx-target="#field-{{ field.id }}"
+              hx-swap="outerHTML"
+              class="flex items-center space-x-2">
+            {% csrf_token %}
+            <input type="text"
+                   name="corrected_value"
+                   value="{{ field.corrected_value|default:'' }}"
+                   placeholder="Correct..."
+                   class="w-32 rounded-md border-gray-300 text-sm shadow-sm
+                          focus:border-brand-500 focus:ring-brand-500
+                          border px-2 py-1.5">
+            <button type="submit"
+                    class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium
+                           text-white bg-brand-600 rounded-md hover:bg-brand-700
+                           transition-colors shadow-sm">
+                Save
+            </button>
+        </form>
+    </td>
+</tr>
