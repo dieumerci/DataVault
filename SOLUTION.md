@@ -15,15 +15,6 @@ I built this as a Django monolith with three apps, a REST API, and an HTMX-power
 
 ---
 
-## Recording Your Video
-
-- Use Loom, make sure your audio works before you start
-- Focus on **why** you made choices — don't just walk through the code
-- Cover what you chose, what the alternatives were, and why you didn't pick them
-- The reviewers care about your thinking process, not just the end result
-
----
-
 ## File Structure
 
 ```
@@ -330,23 +321,3 @@ If I had more time, in priority order:
 6. **File scanning** — ClamAV to check uploads before extraction
 7. **Full-text search** — PostgreSQL `tsvector` for more powerful field value search
 8. **Rate limiting** — throttle upload endpoints to prevent abuse
-
----
-
-## Video Guide
-
-**Suggested flow (8-12 minutes):**
-
-1. **Start with the live demo** — upload a document, correct a field, search for it. This gives the reviewer context for everything you talk about after
-2. **Architecture** — show the three-app structure, explain the services pattern
-3. **Walk through the domain layer** — models, effective value, extraction pipeline
-4. **Show the API layer** — REST endpoints, auth setup, serializers
-5. **Explain the HTMX pattern** — partial templates, how a correction works without page reload
-6. **Talk through testing** — which tests matter most and why
-7. **Close with trade-offs** — what you'd change for production, what you intentionally scoped out
-
-**Tips:**
-- Speak to the "why" more than the "what" — they can read the code, they can't read your mind
-- Don't read code line by line — point at a key section and explain the decision behind it
-- The trade-offs section is your chance to show maturity. Saying "I chose not to do X because Y" is more impressive than just having done everything
-- Keep it conversational — imagine you're explaining it to a colleague, not presenting to an audience
