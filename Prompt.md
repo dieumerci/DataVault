@@ -16,21 +16,7 @@ The services layer decision was mine — I've seen too many Django projects wher
 
 ---
 
-## Prompt 2 — Search Query & Database Edge Cases
-
-**"I'm building a search endpoint that needs to filter documents by field values, but some fields have been corrected. How do I make the search use the corrected value when it exists and fall back to the original? I also need to filter by amount ranges on text fields. Show me how to handle this with Django ORM annotations and raw SQL where the ORM falls short."**
-
-### What I was thinking:
-
-This was the hardest part of the assignment. The search has to look at the *effective* value — meaning if someone corrected a customer name from "John" to "Jane", searching for "John" should return nothing and "Jane" should find it. That's not something you can do with a basic `filter()` call.
-
-I used the AI to talk through the approach: annotate each field with `Coalesce(F('corrected_value'), F('original_value'))` and then filter on that annotation. That handles text matching. But amount ranges were trickier — the values are stored as text (since different field types share the same column), so I needed `CAST(COALESCE(...) AS NUMERIC)`. The ORM can't do that natively, so I used `.extra()` for that specific filter.
-
-I also asked about the "multiplication problem" — if you naively JOIN documents with fields, a document with 4 fields shows up 4 times in results. The fix was subqueries: find matching field IDs first, then filter documents by those IDs. The AI helped me see that pitfall before I hit it in testing.
-
----
-
-## Prompt 3 — UI Polish & HTMX Patterns
+## Prompt 2 — UI Polish & HTMX Patterns
 
 **"I want to add inline field correction to my document detail page using HTMX. When the user types a corrected value and hits enter, the row should update without a full page reload. Show me the partial template pattern — how to use the same template fragment for both initial render and the HTMX swap response."**
 
@@ -42,7 +28,7 @@ The AI helped me get the `hx-post`, `hx-target`, and `hx-swap="outerHTML"` wirin
 
 ---
 
-## Prompt 4 — Generating Sample PDFs for Testing
+## Prompt 3 — Generating Sample PDFs for Testing
 
 **"I need realistic sample PDF documents to test my extraction pipeline. Generate one for each form type my app supports: a W-9 tax form, an ACH Authorization form, and a Loan Application. Each one should have realistic-looking field labels and values — things like routing numbers, account numbers, dollar amounts, and customer names — laid out the way you'd actually see them on a real form. I need the parsers to be able to pick up the fields, so make sure the labels match patterns like 'Name:', 'Customer:', 'Amount: $X,XXX.XX', and include 9-digit routing numbers."**
 
