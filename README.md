@@ -4,6 +4,8 @@
 
 Upload financial documents (PDF or JSON), automatically extract key fields like routing numbers and amounts, then let operations users review and correct the extracted data through a clean web interface. Every correction is tracked — who changed what and when — so you always have a full audit trail.
 
+Link to Video: https://drive.google.com/file/d/1u2ye9PQgXuFEXwS5anN1OXIawx3c9QP1/view?usp=sharing
+
 ---
 
 ## Tech Stack
