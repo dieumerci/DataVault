@@ -40,7 +40,7 @@ Docker handles PostgreSQL, migrations, and the web server automatically. You don
 
 ```bash
 # 1. Clone the repo and enter the project folder
-git clone <repo-url>
+git clone git@github.com:dieumercii/Data-Vault.git
 cd Data-Vault
 
 # 2. Create your environment file from the template
@@ -109,7 +109,7 @@ Run Django directly on your machine. This gives you faster reload cycles and eas
 
 ```bash
 # 1. Clone the repo
-git clone <repo-url>
+git clone git@github.com:dieumercii/Data-Vault.git
 cd Data-Vault
 
 # 2. Create a virtual environment
