@@ -1,18 +1,13 @@
-"""
-Admin configuration — mostly for convenience during development.
-Not a deliverable, but saves time when debugging data issues.
-"""
+# Admin configuration — mostly for convenience during development.
 
 from django.contrib import admin
 from .models import Document, Field
-
 
 class FieldInline(admin.TabularInline):
     """Show fields inline on the document admin page."""
     model = Field
     extra = 0  # don't show empty rows by default
     readonly_fields = ("original_value", "confidence", "corrected_at", "corrected_by")
-
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):

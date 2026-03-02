@@ -1,11 +1,3 @@
-# ──────────────────────────────────────────────────────────────
-# Makefile — shortcuts for common Docker commands
-#
-# Instead of typing "docker compose exec web python manage.py test"
-# every time, just type "make test". Same result, less typing.
-#
-# Usage:  make build && make up && make superuser
-# ──────────────────────────────────────────────────────────────
 
 .PHONY: build up down migrate superuser test shell logs restart
 

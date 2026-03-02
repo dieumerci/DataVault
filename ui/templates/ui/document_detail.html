@@ -99,11 +99,6 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                <!--
-                  Each row is a partial template — this is the core HTMX pattern.
-                  The same partial serves both the initial page load (via include)
-                  and the swap response when a correction is saved.
-                -->
                 {% for field in document.fields.all %}
                     {% include "ui/partials/field_row.html" with field=field %}
                 {% endfor %}

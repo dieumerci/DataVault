@@ -29,11 +29,6 @@
     </div>
     {% endif %}
 
-    <!--
-      Django's built-in LoginView handles all the auth logic.
-      We just provide the template — it validates credentials,
-      creates the session, and redirects to LOGIN_REDIRECT_URL.
-    -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <form method="post" class="space-y-4">
             {% csrf_token %}

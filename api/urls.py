@@ -18,8 +18,6 @@ URL design:
 from django.urls import path
 from . import views
 
-# app_name lets us reference these URLs as "api:document-list" etc.
-# in reverse() calls and {% url %} tags. Keeps things namespaced.
 app_name = "api"
 
 urlpatterns = [

@@ -1,57 +1,7 @@
-# ──────────────────────────────────────────────────
-# Python dependencies for Data Vault
-# Install with: pip install -r requirements.txt
-# ──────────────────────────────────────────────────
-
-# --- Core Framework ---
-# Django is the backbone — it handles URL routing, the ORM, templates,
-# authentication, and the admin panel. We're on 5.1.4 (latest stable).
-Django==5.1.4
-
-# DRF (Django REST Framework) adds everything we need for the JSON API:
-# serializers to convert models to JSON, class-based views, token auth,
-# pagination, and the browsable API for debugging.
 djangorestframework==3.15.2
-
-# django-filter gives us declarative queryset filtering. Instead of
-# writing manual if/else chains for each search parameter, we define
-# filter classes and DRF applies them automatically.
 django-filter==24.3
-
-# --- Database ---
-# We provide two PostgreSQL adapters to cover all environments:
-#
-# psycopg (v3) — the modern adapter. Pure Python, works on any Python
-# version without needing a C compiler or pg_config. This is what runs
-# locally on newer Python versions (3.13+).
-#
-# psycopg2-binary — the classic adapter. Ships pre-compiled C wheels
-# for Python 3.8-3.12. Faster for bulk operations, and what runs inside
-# our Docker container (Python 3.12-slim).
-#
-# Django 5.1 auto-detects which one is installed and picks the right
-# database backend — no settings change needed.
 psycopg>=3.1.0
 psycopg2-binary==2.9.10; python_version < "3.13"
-
-# --- PDF Processing ---
-# pypdf is a pure-Python PDF reader. It extracts text from text-based PDFs
-# without needing Tesseract, poppler, or any system-level libraries.
-# That keeps our Docker image small and our build fast.
-# Trade-off: it can't handle scanned documents (those need OCR).
 pypdf==5.1.0
-
-# --- Environment ---
-# python-dotenv reads the .env file at the project root and loads its
-# values into os.environ. This is how settings.py picks up database
-# credentials and other config without hardcoding them.
-# In Docker, env vars come from docker-compose's env_file instead,
-# but dotenv makes local development (without Docker) work the same way.
 python-dotenv==1.0.1
-
-# --- Production Server ---
-# Gunicorn is a production-grade WSGI server. Django's built-in runserver
-# is single-threaded and not meant for real traffic. Gunicorn runs multiple
-# worker processes so it can handle concurrent requests.
-# We use it in Docker; for local development, `python manage.py runserver` is fine.
 gunicorn==23.0.0

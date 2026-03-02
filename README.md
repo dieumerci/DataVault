@@ -71,14 +71,7 @@ docker compose down
 # Watch the server logs in real time
 docker compose logs -f web
 
-# Run the test suite
-docker compose exec web python manage.py test --verbosity=2
 
-# Open a Django Python shell (for debugging)
-docker compose exec web python manage.py shell
-
-# Restart the web server (picks up template/code changes)
-docker compose restart web
 ```
 
 #### Makefile Shortcuts
@@ -108,6 +101,7 @@ Run Django directly on your machine. This gives you faster reload cycles and eas
 - **Python 3.12+** — check with `python3 --version`
 - **PostgreSQL 16** — running on your machine or a remote server
 - **pip** — comes with Python (check with `pip3 --version`)
+- **macOS only:** `brew install libpq` — the PostgreSQL client library. The app auto-detects it from Homebrew, no extra config needed. (Linux includes it with PostgreSQL; Docker doesn't need it.)
 
 #### Step-by-step Setup
 
@@ -163,9 +157,15 @@ psql -c "CREATE DATABASE datavault OWNER datavault;"
 
 # 7. Run Django migrations to create all the tables
 python manage.py migrate
+```
 
-# 8. Create an admin user for the web UI
+#### Create an admin user
+
+```bash
+# 8. Create a superuser so you can log in to the web UI
 python manage.py createsuperuser
+# Follow the prompts to set username, email, and password.
+# For quick testing, use: admin / admin@test.com / admin
 ```
 
 #### Start the development server
@@ -360,7 +360,6 @@ Data-Vault/
 ├── Makefile                    # Shortcut commands (make test, make up, etc.)
 ├── requirements.txt            # Pinned Python dependencies with explanations
 ├── .env.example                # Template for environment variables
-├── SOLUTION.md                 # Architecture decisions and trade-offs
-├── WALKTHROUGH.md              # Video walkthrough script for Loom recording
+├── SOLUTION.md                 # Architecture decisions, trade-offs, and video presentation guide
 └── README.md                   # This file
 ```

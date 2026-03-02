@@ -10,17 +10,6 @@
     </p>
 </div>
 
-<!--
-  Search form with HTMX dynamic updates.
-
-  How this works:
-    - hx-get sends a GET to this same URL with the filter params
-    - hx-target="#results" tells HTMX to update just the results div
-    - hx-swap="innerHTML" replaces the div's contents (not the div itself)
-    - hx-push-url="true" updates the browser URL so searches are bookmarkable
-    - The server checks for HX-Request header: if present, returns only the
-      results partial. If not, returns the full page with filters + results.
--->
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
     <form hx-get="{% url 'ui:search' %}"
           hx-target="#results"
@@ -29,7 +18,6 @@
           hx-push-url="true"
           class="p-6">
 
-        <!-- First row: text-based filters -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
                 <label for="form_type" class="block text-sm font-medium text-gray-700 mb-1">
@@ -70,7 +58,6 @@
             </div>
         </div>
 
-        <!-- Second row: numeric and date range filters -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
             <div>
                 <label for="amount_min" class="block text-sm font-medium text-gray-700 mb-1">
@@ -126,10 +113,6 @@
                 </svg>
                 Search
             </button>
-            <!--
-              Loading indicator — HTMX shows this while the request is in flight.
-              The htmx-indicator class is hidden by default and shown during requests.
-            -->
             <span class="htmx-indicator text-sm text-gray-400">
                 Searching...
             </span>
@@ -137,7 +120,6 @@
     </form>
 </div>
 
-<!-- Results area — HTMX replaces the inner HTML of this div -->
 <div id="results">
     {% include "ui/partials/search_results.html" %}
 </div>

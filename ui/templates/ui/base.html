@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Data Vault{% endblock %}</title>
-
-    <!--
-      Tailwind CSS (play CDN) — compiles utility classes in the browser.
-      Great for prototypes and demos. In production you'd use the CLI build
-      to purge unused classes and ship a tiny CSS bundle.
-    -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // Small customization so our brand color is available as 'brand'
@@ -30,11 +24,6 @@
         }
     </script>
 
-    <!--
-      HTMX — makes our UI dynamic without writing JavaScript.
-      Attributes like hx-post, hx-target, hx-swap turn plain HTML
-      into an interactive SPA-like experience.
-    -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
     <style>
@@ -59,7 +48,7 @@
         }
     </style>
 </head>
-<body class="h-full">
+<body class="h-full" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     <div class="min-h-full">
         <!-- Top navigation bar -->
         <nav class="bg-white shadow-sm border-b border-gray-200">
@@ -104,10 +93,13 @@
                             <span class="text-sm text-gray-500">
                                 Logged in as <strong class="text-gray-700">{{ user.username }}</strong>
                             </span>
-                            <a href="{% url 'ui:logout' %}"
-                               class="text-sm text-gray-500 hover:text-red-600 transition-colors">
-                                Sign out
-                            </a>
+                            <form method="post" action="{% url 'ui:logout' %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="text-sm text-gray-500 hover:text-red-600 transition-colors cursor-pointer">
+                                    Sign out
+                                </button>
+                            </form>
                         {% else %}
                             <a href="{% url 'ui:login' %}"
                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white

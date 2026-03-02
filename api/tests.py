@@ -1,27 +1,3 @@
-"""
-API integration tests.
-
-These test the HTTP layer end-to-end — they make real requests to real
-endpoints with a real test database. We focus on the scenarios that
-would cause the most damage if they broke:
-
-  1. Auth enforcement — can't modify financial data without logging in
-  2. Reporting endpoint — tests the raw SQL query from ingestion to response
-  3. Search with corrections — verifies COALESCE logic at the database level
-
-Why these three?
-  Auth is a hard requirement. If unauthenticated users could PATCH field
-  values, the whole correction audit trail falls apart.
-
-  The reporting query uses raw SQL, which is more error-prone than ORM
-  queries. A typo in the SQL would only surface at runtime.
-
-  Search with corrections is the most subtle: we need to prove that
-  searching for "Jane" finds a field that was *corrected* to "Jane",
-  and searching for the *original* value doesn't find it anymore.
-  If this breaks, ops users would see stale data.
-"""
-
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
@@ -31,12 +7,6 @@ from documents.models import Document, Field
 
 
 class AuthTests(TestCase):
-    """
-    Verify that write endpoints require authentication.
-
-    This is critical for a financial document system — we can't let
-    anonymous users modify extracted field values.
-    """
 
     def setUp(self):
         # Create a document with one field to test corrections against
@@ -47,11 +17,7 @@ class AuthTests(TestCase):
         )
 
     def test_anonymous_patch_is_rejected(self):
-        """
-        Sending a PATCH without any authentication should fail.
-        DRF returns either 401 (no credentials) or 403 (insufficient
-        permissions) depending on the auth backend — both are correct.
-        """
+
         resp = self.client.patch(
             f"/api/fields/{self.field.pk}/",
             {"corrected_value": "200.00"},
@@ -60,13 +26,7 @@ class AuthTests(TestCase):
         self.assertIn(resp.status_code, [401, 403])
 
     def test_authenticated_patch_works(self):
-        """
-        An authenticated user should be able to correct a field.
-        We also verify the audit fields are stamped correctly:
-          - corrected_value is saved
-          - corrected_by points to the user who made the change
-          - corrected_at is set (not None)
-        """
+
         user = User.objects.create_user("tester", password="pass123")
         self.client.force_authenticate(user=user)
 
@@ -85,25 +45,12 @@ class AuthTests(TestCase):
 
 
 class ReportingTests(TestCase):
-    """
-    Test the top-corrections reporting endpoint end-to-end.
-
-    This endpoint hits our raw SQL query, so it's important to verify
-    that the GROUP BY, COUNT, and ORDER BY all work correctly together.
-    A bug here would give ops teams wrong data about which fields need
-    the most attention.
-    """
 
     def setUp(self):
         self.client = APIClient()
         self.doc = Document.objects.create(form_type="w9", status="processed")
         now = timezone.now()
 
-        # Set up a known distribution of corrections:
-        #   "amount"         → 5 corrections (should rank #1)
-        #   "routing_number" → 3 corrections (should rank #2)
-        #   "customer_name"  → 1 correction  (should rank #3)
-        #   "account_number" → 0 corrections (should NOT appear)
         for i in range(5):
             Field.objects.create(
                 document=self.doc, key="amount",
@@ -121,17 +68,13 @@ class ReportingTests(TestCase):
             original_value="Old Name", corrected_value="New Name",
             corrected_at=now,
         )
-        # This field has NO correction — it should be excluded from results
         Field.objects.create(
             document=self.doc, key="account_number",
             original_value="12345",
         )
 
     def test_returns_top_3_in_order(self):
-        """
-        The report should return the three most-corrected field keys,
-        ordered by correction count descending.
-        """
+
         resp = self.client.get("/api/reports/top-corrections/")
         self.assertEqual(resp.status_code, 200)
 
@@ -144,16 +87,6 @@ class ReportingTests(TestCase):
 
 
 class SearchWithCorrectionsTests(TestCase):
-    """
-    The most important test in the suite: search must use effective_value.
-
-    Scenario: a field was extracted as "John Smith" but an ops user
-    corrected it to "Jane Doe". Searching for "Jane" should find the
-    document, and searching for "John" should NOT.
-
-    If this breaks, users would see stale data — they'd correct a field
-    but search would still return results based on the old value.
-    """
 
     def setUp(self):
         self.client = APIClient()
@@ -173,11 +106,7 @@ class SearchWithCorrectionsTests(TestCase):
         self.assertEqual(resp.json()["count"], 1)
 
     def test_search_ignores_stale_original(self):
-        """
-        Searching for 'John' should NOT find the document anymore.
-        The effective value is now 'Jane Doe', so the original 'John Smith'
-        should be invisible to search. This proves COALESCE works at the DB level.
-        """
+
         resp = self.client.get(
             "/api/documents/",
             {"field_key": "customer_name", "field_value": "John"},

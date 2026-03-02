@@ -1,11 +1,3 @@
-<!--
-  Search results partial — used in two ways:
-    1. Included inside search.html for the initial full-page render
-    2. Returned alone for HTMX requests (just the results, no filters)
-
-  This dual-use pattern keeps the initial render and dynamic updates
-  in sync automatically. Change this template and both paths update.
--->
 {% if documents %}
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div class="px-6 py-3 border-b border-gray-100 bg-gray-50">
